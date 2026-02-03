@@ -1,0 +1,63 @@
+version: 1
+
+job:
+  name: rd_thai_revenue_income_tax
+
+source:
+  type: website
+  start_urls:
+    - https://www.rd.go.th/english/37748.html
+
+crawl:
+  scope:
+    allowed_domains:
+      - www.rd.go.th
+    include_paths:
+      - /english/
+    exclude_patterns:
+      - \.pdf$
+      - \.zip$
+  depth:
+    max: 3
+  follow_links: true
+
+extract:
+  mode: article
+  article:
+    title_selectors:
+      - h1
+      - h2
+    content_selectors:
+      - article
+      - main
+      - .content
+      - #content
+    remove_selectors:
+      - nav
+      - footer
+      - header
+      - .breadcrumb
+      - .share
+      - script
+      - style
+
+structure:
+  hierarchy:
+    - level: Chapter
+      detect:
+        by: heading
+        pattern: "^Chapter|^Title"
+    - level: Section
+      detect:
+        by: link
+        pattern: "^Section"
+
+output:
+  format: markdown
+  directory: output
+  file_naming:
+    by: hierarchy
+    separator: "/"
+  index:
+    generate: true
+    filename: INDEX.md
