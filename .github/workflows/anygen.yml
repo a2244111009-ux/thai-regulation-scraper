@@ -1,0 +1,17 @@
+name: Run AnyGen Scraper
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-anygen:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run AnyGen
+        uses: anygen-ai/anygen-action@v1
+        with:
+          config: anygen.yaml
