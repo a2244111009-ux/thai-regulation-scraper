@@ -161,7 +161,8 @@ video {
   opacity: 0;
   pointer-events: none;
   transform: translateY(30px);
-  will-change: transform, opacity, filter;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 .hero-stage.is-active {
@@ -266,6 +267,7 @@ video {
   overflow: hidden;
   transform: translateZ(0);
   will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 .record-circle::before {
@@ -553,6 +555,8 @@ video {
   width: min(480px, 40vw);
   color: #f6f0de;
   text-shadow: 0 0 18px rgba(255, 191, 92, 0.25);
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 .timeline-year-title {
@@ -833,9 +837,9 @@ video {
     linear-gradient(140deg, rgba(255, 176, 73, 0.08), rgba(255, 255, 255, 0.02)),
     rgba(8, 14, 28, 0.74);
   overflow: hidden;
-  filter: blur(9px);
   opacity: 0;
   transform: translateY(34px);
+  will-change: transform, opacity;
 }
 
 .news-card img {
@@ -903,7 +907,7 @@ video {
   padding-top: 18vh;
   opacity: 0;
   transform: translateY(58px);
-  filter: blur(16px);
+  will-change: transform, opacity;
 }
 
 .invest-content h2 {

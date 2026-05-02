@@ -56,19 +56,20 @@ let globalSnapST = null;
 let sectionSnapLock = false;
 let bridgeST = null;
 let bridgeActive = false;
+let lastHeroProgress = -1;
+let lastTimelineProgress = -1;
 
 function clamp01(v) {
   return Math.max(0, Math.min(1, v));
 }
 
 function applyWaveUp(items, progress, options = {}) {
-  const { stagger = 0.2, rise = 58, blur = 0 } = options;
+  const { stagger = 0.2, rise = 58 } = options;
   items.forEach((el, idx) => {
     const local = clamp01((progress - idx * stagger) / (1 - Math.min(0.85, stagger * (items.length - 1))));
     gsap.set(el, {
       autoAlpha: local,
       y: (1 - local) * rise,
-      filter: blur > 0 ? `blur(${(1 - local) * blur}px)` : "blur(0px)",
     });
   });
 }
@@ -165,7 +166,8 @@ function setYear(index) {
 
 function buildJoinParticles() {
   if (!joinParticles) return;
-  const count = 46;
+  const isMobileViewport = window.matchMedia("(max-width: 960px)").matches;
+  const count = isMobileViewport ? 14 : 24;
   for (let i = 0; i < count; i += 1) {
     const particle = document.createElement("span");
     particle.className = "join-particle";
@@ -213,21 +215,30 @@ yearDots.forEach((dot) => {
 
 if (window.gsap && window.ScrollTrigger) {
   gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({
+    limitCallbacks: true,
+    ignoreMobileResize: true,
+  });
   buildTimelineFlow();
 
   gsap.set([stage2, stage3, stage4], { autoAlpha: 0 });
   gsap.set([bgOrange, bgNeon], { opacity: 0 });
   gsap.set(recordCircle, { scale: 1, transformOrigin: "center center" });
+  if (timelineContent) gsap.set(timelineContent, { autoAlpha: 0 });
 
   heroST = ScrollTrigger.create({
     trigger: ".hero-pin",
     start: "top top",
     end: "+=2400",
     pin: true,
-    scrub: true,
+    scrub: 0.28,
+    anticipatePin: 1,
+    fastScrollEnd: true,
     onUpdate: (self) => {
       if (fastTransitionLock) return;
       const p = self.progress;
+      if (Math.abs(p - lastHeroProgress) < 0.0014) return;
+      lastHeroProgress = p;
       const stage1Leave = clamp01((p - 0.1) / 0.08);
       const stage2Wave = clamp01((p - 0.17) / 0.14);
       const stage3Rise = clamp01((p - 0.34) / 0.14);
@@ -237,13 +248,12 @@ if (window.gsap && window.ScrollTrigger) {
         gsap.set(el, {
           autoAlpha: 1 - stage1Leave,
           y: -stage1Leave * 66,
-          filter: `blur(${stage1Leave * 7}px)`,
         });
       });
 
-      applyWaveUp(stage2MetricEls, stage2Wave, { stagger: 0.2, rise: 82, blur: 0 });
-      applyWaveUp(stage3TextEls, stage3Rise, { stagger: 0.17, rise: 90, blur: 12 });
-      applyWaveUp(stage4TextEls, stage4Rise, { stagger: 0.22, rise: 92, blur: 12 });
+      applyWaveUp(stage2MetricEls, stage2Wave, { stagger: 0.2, rise: 82 });
+      applyWaveUp(stage3TextEls, stage3Rise, { stagger: 0.17, rise: 90 });
+      applyWaveUp(stage4TextEls, stage4Rise, { stagger: 0.22, rise: 92 });
 
       if (p < 0.16) {
         showOnly(stage1);
@@ -332,14 +342,15 @@ if (window.gsap && window.ScrollTrigger) {
     start: "top top",
     end: "+=2200",
     pin: true,
-    scrub: true,
+    scrub: 0.32,
+    anticipatePin: 1,
+    fastScrollEnd: true,
     onEnter: () => setNavActive("timeline"),
     onUpdate: (self) => {
+      if (Math.abs(self.progress - lastTimelineProgress) < 0.0014) return;
+      lastTimelineProgress = self.progress;
       const idx = Math.round(self.progress * (years.length - 1));
       const t = self.progress;
-      if (timelineContent) {
-        gsap.set(timelineContent, { autoAlpha: 0 });
-      }
       if (timelineFlowItems.length) {
         const spacing = 560;
         const anchorX = window.innerWidth * 0.12;
@@ -377,7 +388,6 @@ if (window.gsap && window.ScrollTrigger) {
   gsap.to(newsCards, {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     duration: 1.05,
     stagger: 0.16,
     scrollTrigger: {
@@ -419,11 +429,10 @@ if (window.gsap && window.ScrollTrigger) {
 
   gsap.fromTo(
     newsTextEls,
-    { y: 88, opacity: 0, filter: "blur(12px)" },
+    { y: 88, opacity: 0 },
     {
       y: 0,
       opacity: 1,
-      filter: "blur(0px)",
       stagger: 0.045,
       ease: "none",
       scrollTrigger: {
@@ -453,7 +462,6 @@ if (window.gsap && window.ScrollTrigger) {
   gsap.to(".invest-content", {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     duration: 1.4,
     ease: "power2.out",
     scrollTrigger: {
@@ -553,10 +561,10 @@ if (window.gsap && window.ScrollTrigger) {
       gsap.set(bridgeNext, { autoAlpha: 0, scale: 1, x: 0, y: 0 });
       gsap.set(timelineScene, { scale: 1, autoAlpha: 1, y: 0 });
     }
-    window.scrollTo({ top, behavior: "smooth" });
+    window.scrollTo({ top, behavior: "auto" });
     setTimeout(() => {
       sectionSnapLock = false;
-    }, 220);
+    }, 110);
   };
 
   window.addEventListener(
@@ -570,11 +578,11 @@ if (window.gsap && window.ScrollTrigger) {
 
       if (y >= timelineST.start && y <= timelineST.end) {
         const p = (y - timelineST.start) / (timelineST.end - timelineST.start);
-        if (delta > 0 && p > 0.5) {
+        if (delta > 0 && p > 0.58) {
           event.preventDefault();
           snapTo(timelineST.end + 2);
         }
-        if (delta < 0 && p < 0.5) {
+        if (delta < 0 && p < 0.42) {
           event.preventDefault();
           snapTo(timelineST.start);
         }
@@ -587,10 +595,10 @@ if (window.gsap && window.ScrollTrigger) {
         const next = tops[i + 1];
         if (y >= top && y < next) {
           const p = (y - top) / (next - top);
-          if (delta > 0 && p > 0.5) {
+          if (delta > 0 && p > 0.58) {
             event.preventDefault();
             snapTo(next);
-          } else if (delta < 0 && p < 0.5) {
+          } else if (delta < 0 && p < 0.42) {
             event.preventDefault();
             snapTo(top);
           }
