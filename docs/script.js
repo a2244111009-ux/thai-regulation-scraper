@@ -56,7 +56,6 @@ let globalSnapST = null;
 let sectionSnapLock = false;
 let bridgeST = null;
 let bridgeActive = false;
-let lastHeroProgress = -1;
 let lastTimelineProgress = -1;
 let bridgeStartTop = 0;
 let bridgeEndTop = 0;
@@ -233,14 +232,12 @@ if (window.gsap && window.ScrollTrigger) {
     start: "top top",
     end: "+=2400",
     pin: true,
-    scrub: 0.28,
+    scrub: 0.12,
     anticipatePin: 1,
     fastScrollEnd: true,
     onUpdate: (self) => {
       if (fastTransitionLock) return;
       const p = self.progress;
-      if (Math.abs(p - lastHeroProgress) < 0.0014) return;
-      lastHeroProgress = p;
       const stage1Leave = clamp01((p - 0.1) / 0.08);
       const stage2Wave = clamp01((p - 0.17) / 0.14);
       const stage3Rise = clamp01((p - 0.34) / 0.14);
@@ -486,7 +483,7 @@ if (window.gsap && window.ScrollTrigger) {
     bridgeST = ScrollTrigger.create({
       start: heroST.end - 32,
       end: timelineST.start + 32,
-      scrub: true,
+      scrub: 0.16,
       onUpdate: (self) => {
         bridgeActive = true;
         const t = self.progress;
@@ -568,7 +565,7 @@ if (window.gsap && window.ScrollTrigger) {
     window.scrollTo({ top, behavior: "auto" });
     setTimeout(() => {
       sectionSnapLock = false;
-    }, 110);
+    }, 220);
   };
 
   window.addEventListener(
@@ -581,22 +578,21 @@ if (window.gsap && window.ScrollTrigger) {
 
       if (bridgeStartTop > 0 && bridgeEndTop > bridgeStartTop && y >= bridgeStartTop && y <= bridgeEndTop) {
         const p = (y - bridgeStartTop) / (bridgeEndTop - bridgeStartTop);
-        const aboutTop = heroST.start + (heroST.end - heroST.start) * 0.94;
-        event.preventDefault();
+        const aboutTop = heroST.end - 36;
+        const timelineTop = timelineST.start + 36;
         if (delta > 0) {
-          if (p > 0.46) {
-            snapTo(timelineST.start + 2);
-          } else {
-            snapTo(aboutTop);
+          if (p > 0.52) {
+            event.preventDefault();
+            snapTo(timelineTop);
+            return;
           }
         } else if (delta < 0) {
-          if (p < 0.54) {
+          if (p < 0.48) {
+            event.preventDefault();
             snapTo(aboutTop);
-          } else {
-            snapTo(timelineST.start + 2);
+            return;
           }
         }
-        return;
       }
 
       if (y < timelineST.start - 2) return;
