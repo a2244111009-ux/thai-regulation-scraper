@@ -237,11 +237,11 @@ if (window.gsap && window.ScrollTrigger) {
     fastScrollEnd: true,
     snap: {
       snapTo: [0, 0.32, 0.56, 0.84, 1],
-      duration: { min: 0.08, max: 0.22 },
-      delay: 0.06,
+      duration: { min: 0.06, max: 0.16 },
+      delay: 0.12,
       ease: "power1.out",
       directional: true,
-      inertia: false,
+      inertia: true,
     },
     onUpdate: (self) => {
       if (fastTransitionLock) return;
@@ -352,6 +352,14 @@ if (window.gsap && window.ScrollTrigger) {
     scrub: 0.32,
     anticipatePin: 1,
     fastScrollEnd: true,
+    snap: {
+      snapTo: [0, 1],
+      duration: { min: 0.08, max: 0.18 },
+      delay: 0.1,
+      ease: "power1.out",
+      directional: true,
+      inertia: true,
+    },
     onEnter: () => setNavActive("timeline"),
     onUpdate: (self) => {
       if (Math.abs(self.progress - lastTimelineProgress) < 0.0014) return;
@@ -494,11 +502,11 @@ if (window.gsap && window.ScrollTrigger) {
       scrub: 0.16,
       snap: {
         snapTo: [0, 1],
-        duration: { min: 0.08, max: 0.2 },
-        delay: 0.04,
-        directional: false,
+        duration: { min: 0.06, max: 0.14 },
+        delay: 0.03,
+        directional: true,
         ease: "power1.out",
-        inertia: false,
+        inertia: true,
       },
       onUpdate: (self) => {
         bridgeActive = true;
@@ -580,73 +588,36 @@ if (window.gsap && window.ScrollTrigger) {
       gsap.set(bridgeNext, { autoAlpha: 0, scale: 1, x: 0, y: 0 });
       gsap.set(timelineScene, { scale: 1, autoAlpha: 1, y: 0 });
     }
-    window.scrollTo({ top, behavior: "auto" });
+    window.scrollTo({ top, behavior: "smooth" });
     setTimeout(() => {
       sectionSnapLock = false;
-    }, 220);
+    }, 180);
   };
 
-  window.addEventListener(
-    "wheel",
-    (event) => {
+  let autoSnapTimer = null;
+  const scheduleAutoSnap = () => {
+    if (autoSnapTimer) clearTimeout(autoSnapTimer);
+    autoSnapTimer = setTimeout(() => {
       if (sectionSnapLock || !timelineST) return;
       const y = window.scrollY;
-      const delta = event.deltaY;
-      if (Math.abs(delta) < 2) return;
-
-      if (bridgeStartTop > 0 && bridgeEndTop > bridgeStartTop && y >= bridgeStartTop && y <= bridgeEndTop) {
-        const p = (y - bridgeStartTop) / (bridgeEndTop - bridgeStartTop);
-        const aboutTop = heroST.end - 36;
-        const timelineTop = timelineST.start + 36;
-        if (delta > 0) {
-          if (p > 0.52) {
-            event.preventDefault();
-            snapTo(timelineTop);
-            return;
-          }
-        } else if (delta < 0) {
-          if (p < 0.48) {
-            event.preventDefault();
-            snapTo(aboutTop);
-            return;
-          }
-        }
-      }
-
       if (y < timelineST.start - 2) return;
-
-      if (y >= timelineST.start && y <= timelineST.end) {
-        const p = (y - timelineST.start) / (timelineST.end - timelineST.start);
-        if (delta > 0 && p > 0.58) {
-          event.preventDefault();
-          snapTo(timelineST.end + 2);
-        }
-        if (delta < 0 && p < 0.42) {
-          event.preventDefault();
-          snapTo(timelineST.start);
-        }
-        return;
-      }
-
+      if (y >= timelineST.start && y <= timelineST.end) return;
+      if (bridgeStartTop > 0 && bridgeEndTop > bridgeStartTop && y >= bridgeStartTop && y <= bridgeEndTop) return;
       const tops = getSnapTops();
-      for (let i = 0; i < tops.length - 1; i += 1) {
-        const top = tops[i];
-        const next = tops[i + 1];
-        if (y >= top && y < next) {
-          const p = (y - top) / (next - top);
-          if (delta > 0 && p > 0.58) {
-            event.preventDefault();
-            snapTo(next);
-          } else if (delta < 0 && p < 0.42) {
-            event.preventDefault();
-            snapTo(top);
-          }
-          break;
-        }
+      if (!tops.length) return;
+      const nearest = tops.reduce((best, cur) => (
+        Math.abs(cur - y) < Math.abs(best - y) ? cur : best
+      ), tops[0]);
+      const maxSnapDist = window.innerHeight * 0.46;
+      if (Math.abs(nearest - y) <= maxSnapDist) {
+        snapTo(nearest);
       }
-    },
-    { passive: false }
-  );
+    }, 95);
+  };
+
+  window.addEventListener("wheel", scheduleAutoSnap, { passive: true });
+  window.addEventListener("touchend", scheduleAutoSnap, { passive: true });
+  window.addEventListener("keyup", scheduleAutoSnap, { passive: true });
 }
 
 if (mobileMenuBtn && mobileMenu) {
