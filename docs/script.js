@@ -235,6 +235,14 @@ if (window.gsap && window.ScrollTrigger) {
     scrub: 0.12,
     anticipatePin: 1,
     fastScrollEnd: true,
+    snap: {
+      snapTo: [0, 0.32, 0.56, 0.84, 1],
+      duration: { min: 0.08, max: 0.22 },
+      delay: 0.06,
+      ease: "power1.out",
+      directional: true,
+      inertia: false,
+    },
     onUpdate: (self) => {
       if (fastTransitionLock) return;
       const p = self.progress;
