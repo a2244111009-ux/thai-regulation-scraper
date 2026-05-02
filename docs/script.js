@@ -492,14 +492,24 @@ if (window.gsap && window.ScrollTrigger) {
       start: heroST.end - 32,
       end: timelineST.start + 32,
       scrub: 0.16,
+      snap: {
+        snapTo: [0, 1],
+        duration: { min: 0.08, max: 0.2 },
+        delay: 0.04,
+        directional: false,
+        ease: "power1.out",
+        inertia: false,
+      },
       onUpdate: (self) => {
         bridgeActive = true;
         const t = self.progress;
         gsap.set(heroPin, { autoAlpha: 0 });
         gsap.set(stage4, { scale: 1, autoAlpha: 0, transformOrigin: "50% 50%", y: 0 });
         gsap.set(sceneBridge, { autoAlpha: 1 });
-        gsap.set(bridgeCurrent, { autoAlpha: 1 - t, scale: 1, x: 0, y: 0 });
-        gsap.set(bridgeNext, { autoAlpha: t, scale: 1, x: 0, y: 0 });
+        const currentAlpha = t < 0.42 ? 1 : t > 0.58 ? 0 : (0.58 - t) / 0.16;
+        const nextAlpha = t < 0.42 ? 0 : t > 0.58 ? 1 : (t - 0.42) / 0.16;
+        gsap.set(bridgeCurrent, { autoAlpha: currentAlpha, scale: 1, x: 0, y: 0 });
+        gsap.set(bridgeNext, { autoAlpha: nextAlpha, scale: 1, x: 0, y: 0 });
         gsap.set(timelineScene, { scale: 1, autoAlpha: 0, y: 0, transformOrigin: "50% 50%" });
       },
       onLeave: () => {
