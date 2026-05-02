@@ -98,6 +98,12 @@ video {
   opacity: 1;
 }
 
+.mobile-hotline,
+.mobile-menu-btn,
+.mobile-menu {
+  display: none;
+}
+
 .hero-pin {
   position: relative;
   height: 100vh;
@@ -1098,7 +1104,40 @@ video {
     display: none;
   }
 
-  .topbar-inner::before {
+  .mobile-menu {
+    position: fixed;
+    top: 66px;
+    left: 0;
+    right: 0;
+    z-index: 119;
+    display: none;
+    padding: 10px 16px 14px;
+    background: rgba(5, 7, 18, 0.96);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+  }
+
+  .mobile-menu.is-open {
+    display: grid;
+    gap: 6px;
+  }
+
+  .mobile-menu a {
+    display: block;
+    padding: 11px 10px;
+    border-radius: 8px;
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .mobile-menu a.active {
+    color: #ffd79c;
+    background: rgba(255, 179, 72, 0.16);
+    border: 1px solid rgba(255, 179, 72, 0.34);
+  }
+
+  .mobile-hotline {
     content: "加盟热线: 18136952568";
     position: absolute;
     right: 54px;
@@ -1117,8 +1156,7 @@ video {
     z-index: 2;
   }
 
-  .topbar-inner::after {
-    content: "\2630";
+  .mobile-menu-btn {
     position: absolute;
     right: 4px;
     top: 50%;
@@ -1132,6 +1170,7 @@ video {
     color: #fff;
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.14);
+    cursor: pointer;
   }
 
   .hero-pin {
@@ -1153,6 +1192,14 @@ video {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .stage-2 .metric-grid {
+    transform: translateY(-9vh);
+  }
+
+  .stage-3 .record-block {
+    transform: translateY(-5vh);
   }
 
   .eyebrow {
@@ -1300,7 +1347,6 @@ video {
   }
 
   .store-scene,
-  .news-scene,
   .invest-scene,
   .join-scene {
     min-height: 100svh;
@@ -1344,7 +1390,9 @@ video {
   }
 
   .news-scene {
-    padding: 90px 0 42px;
+    min-height: auto;
+    height: auto;
+    padding: 90px 0 22px;
   }
 
   .news-head h2 {
@@ -1352,11 +1400,11 @@ video {
   }
 
   .news-list {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 84vw;
-    gap: 12px;
-    width: 100%;
+    display: flex;
+    gap: 14px;
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    padding: 0 4vw 8px;
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
@@ -1372,9 +1420,11 @@ video {
 
   .news-card {
     flex: none;
+    width: 88vw;
     min-height: 360px;
     border-radius: 14px;
     scroll-snap-align: start;
+    overflow: hidden;
   }
 
   .news-card img {
@@ -1387,10 +1437,20 @@ video {
 
   .news-card h3 {
     font-size: 22px;
+    line-height: 1.28;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .news-card p {
     font-size: 16px;
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .invest-scene {
@@ -1465,6 +1525,10 @@ video {
     height: 60px;
   }
 
+  .mobile-menu {
+    top: 60px;
+  }
+
   .brand span {
     font-size: 16px;
   }
@@ -1486,6 +1550,14 @@ video {
   .stage-3 {
     min-height: calc(100svh - 60px);
     padding-top: 60px;
+  }
+
+  .stage-2 .metric-grid {
+    transform: translateY(-7vh);
+  }
+
+  .stage-3 .record-block {
+    transform: translateY(-3vh);
   }
 
   .meta {
@@ -1525,14 +1597,14 @@ video {
     width: 88vw;
   }
 
-  .topbar-inner::before {
+  .mobile-hotline {
     right: 48px;
     font-size: 12px;
     padding: 0 8px;
     height: 26px;
   }
 
-  .topbar-inner::after {
+  .mobile-menu-btn {
     width: 32px;
     height: 32px;
     font-size: 22px;

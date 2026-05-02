@@ -1,4 +1,6 @@
-const navLinks = Array.from(document.querySelectorAll("#mainNav a"));
+const navLinks = Array.from(document.querySelectorAll("[data-nav]"));
+const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+const mobileMenu = document.getElementById("mobileMenu");
 const stage1 = document.getElementById("stage1");
 const stage2 = document.getElementById("stage2");
 const stage3 = document.getElementById("stage3");
@@ -98,6 +100,14 @@ function buildTimelineFlow() {
 
 function setNavActive(key) {
   navLinks.forEach((link) => link.classList.toggle("active", link.dataset.nav === key));
+}
+
+function closeMobileMenu() {
+  if (!mobileMenu) return;
+  mobileMenu.classList.remove("is-open");
+  if (mobileMenuBtn) {
+    mobileMenuBtn.setAttribute("aria-expanded", "false");
+  }
 }
 
 function setStageState(el, active) {
@@ -520,6 +530,7 @@ if (window.gsap && window.ScrollTrigger) {
       const top = navTargetByKey(key);
       setNavActive(key);
       window.scrollTo({ top, behavior: "smooth" });
+      closeMobileMenu();
     });
   });
 
@@ -589,6 +600,21 @@ if (window.gsap && window.ScrollTrigger) {
     },
     { passive: false }
   );
+}
+
+if (mobileMenuBtn && mobileMenu) {
+  mobileMenuBtn.setAttribute("aria-expanded", "false");
+  mobileMenuBtn.addEventListener("click", () => {
+    const willOpen = !mobileMenu.classList.contains("is-open");
+    mobileMenu.classList.toggle("is-open", willOpen);
+    mobileMenuBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!mobileMenu.classList.contains("is-open")) return;
+    if (mobileMenu.contains(event.target) || mobileMenuBtn.contains(event.target)) return;
+    closeMobileMenu();
+  });
 }
 
 buildJoinParticles();
