@@ -1065,61 +1065,369 @@ video {
 
 @media (max-width: 960px) {
   .topbar {
-    height: 68px;
+    height: 66px;
+    background: rgba(5, 7, 18, 0.72);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   }
 
   .topbar-inner {
+    width: 94%;
+    gap: 12px;
     justify-content: flex-start;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .brand {
+    gap: 8px;
+    flex: 0 0 auto;
+  }
+
+  .brand img {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  .brand span {
+    font-size: 20px;
+    line-height: 1;
   }
 
   #mainNav {
     display: none;
   }
 
+  .topbar-inner::before {
+    content: "加盟热线: 18136952568";
+    position: absolute;
+    right: 54px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff2cf;
+    background: linear-gradient(90deg, rgba(223, 151, 35, 0.92), rgba(123, 76, 10, 0.92));
+    border: 1px solid rgba(255, 213, 124, 0.42);
+    z-index: 2;
+  }
+
+  .topbar-inner::after {
+    content: "\2630";
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    font-size: 24px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .hero-pin {
+    height: 100svh;
+    min-height: 680px;
+  }
+
+  .hero-stage {
+    width: 92%;
+    padding-top: 104px;
+  }
+
+  .stage-2,
+  .stage-3 {
+    inset: 66px 0 0 0;
+    min-height: calc(100svh - 66px);
+    padding-top: 0;
+    padding-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .eyebrow {
-    font-size: 20px;
+    font-size: 18px;
+  }
+
+  .stage-1 h1 {
+    margin: 12px 0;
+    font-size: clamp(2rem, 9vw, 3.4rem);
+    line-height: 1.08;
   }
 
   .meta {
-    font-size: 20px;
+    font-size: clamp(1rem, 4.2vw, 1.35rem);
   }
 
   .metric-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    width: min(92vw, 560px);
+    display: flex;
+    flex-direction: column;
+    gap: 42px;
+    align-items: center;
+  }
+
+  .metric {
+    flex: none;
+    width: 100%;
+    max-width: 320px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  .metric h3 {
+    font-size: clamp(2rem, 8.4vw, 3rem);
+  }
+
+  .metric p {
+    margin-top: 8px;
+    font-size: 16px;
   }
 
   .record-block {
-    grid-template-columns: 1fr;
-    gap: 16px;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 18px;
+    width: min(92vw, 560px);
+    margin: 0 auto;
   }
 
-  .record-text li {
-    font-size: 22px;
+  .record-left {
+    gap: 14px;
+  }
+
+  .record-circle {
+    width: min(74vw, 340px);
+  }
+
+  .play-btn {
+    width: 72px;
+    height: 72px;
+    font-size: 30px;
   }
 
   .play-tip {
     width: 100%;
-    font-size: 18px;
+    font-size: 16px;
   }
 
-  .timeline-content p,
-  .about-card p,
-  .store-copy p,
-  .invest-content p {
-    font-size: 18px;
+  .record-text h2 {
+    margin-bottom: 14px;
+    font-size: clamp(1.9rem, 7.2vw, 3rem);
+  }
+
+  .record-text li {
+    padding: 14px 0;
+    font-size: clamp(1rem, 4.1vw, 1.3rem);
+  }
+
+  .about-card {
+    max-width: 100%;
+    padding: 14px 0;
+  }
+
+  .about-card h2 {
+    font-size: clamp(2rem, 8.6vw, 3.2rem);
+  }
+
+  .about-card p {
+    width: 100%;
+    font-size: clamp(1rem, 4.1vw, 1.25rem);
+    line-height: 1.7;
+  }
+
+  .timeline-scene {
+    min-height: 700px;
+  }
+
+  .timeline-year-flow {
+    left: 4%;
+    right: 4%;
+    top: 13%;
+    height: 380px;
+  }
+
+  .timeline-year-item {
+    width: min(80vw, 360px);
+  }
+
+  .timeline-year-title {
+    font-size: clamp(2rem, 9vw, 3.8rem);
+  }
+
+  .timeline-year-desc {
+    margin-top: 12px;
+    font-size: clamp(0.9rem, 3.5vw, 1.15rem);
+  }
+
+  .timeline-track {
+    left: 4%;
+    right: 4%;
+    bottom: 20px;
+  }
+
+  .track-line {
+    top: 12px;
   }
 
   .year-dot {
-    font-size: 12px;
+    padding-top: 28px;
+    font-size: 11px;
+  }
+
+  .year-dot::before {
+    top: 6px;
+    width: 11px;
+    height: 11px;
+  }
+
+  .walker {
+    top: -3px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .store-scene,
+  .news-scene,
+  .invest-scene,
+  .join-scene {
+    min-height: 100svh;
+    height: auto;
+  }
+
+  .store-scene {
+    padding: 90px 0 26px;
   }
 
   .store-grid {
     grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .store-copy h2 {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+
+  .store-copy p {
+    font-size: clamp(0.95rem, 3.9vw, 1.15rem);
+    line-height: 1.7;
+  }
+
+  .map-point em {
+    font-size: 12px;
   }
 
   .store-addresses {
+    margin-top: 14px;
     grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .store-addresses p {
+    padding: 10px 12px;
+    font-size: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(5, 8, 18, 0.46);
+    border-radius: 10px;
+  }
+
+  .news-scene {
+    padding: 90px 0 42px;
+  }
+
+  .news-head h2 {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+
+  .news-list {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 84vw;
+    gap: 12px;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .news-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .news-card {
+    flex: none;
+    min-height: 360px;
+    border-radius: 14px;
+    scroll-snap-align: start;
+  }
+
+  .news-card img {
+    height: 180px;
+  }
+
+  .news-card time {
+    font-size: 14px;
+  }
+
+  .news-card h3 {
+    font-size: 22px;
+  }
+
+  .news-card p {
+    font-size: 16px;
+  }
+
+  .invest-scene {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .invest-content {
+    width: 92%;
+    padding-top: 0;
+    margin-top: 54px;
+  }
+
+  .invest-content h2 {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+
+  .invest-content h3 {
+    font-size: clamp(4.6rem, 18vw, 7rem);
+  }
+
+  .invest-content p {
+    font-size: clamp(1rem, 4.1vw, 1.25rem);
+    line-height: 1.7;
+  }
+
+  .join-scene {
+    padding: 90px 0 32px;
+  }
+
+  .join-scene h2 {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+
+  .join-form {
+    margin-top: 18px;
   }
 
   .line-inputs {
@@ -1127,11 +1435,106 @@ video {
     gap: 10px;
   }
 
-  .news-card {
-    min-height: 420px;
+  .line-inputs input {
+    font-size: 17px;
+    padding: 10px 0;
   }
 
-  .news-list {
-    grid-template-columns: 1fr;
+  .join-form textarea {
+    min-height: 130px;
+    font-size: 16px;
+  }
+
+  .join-form button {
+    width: 176px;
+    height: 50px;
+    font-size: 22px;
+  }
+
+  .floating-join {
+    right: 12px;
+    bottom: 12px;
+    width: 66px;
+    height: 66px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    height: 60px;
+  }
+
+  .brand span {
+    font-size: 16px;
+  }
+
+  #mainNav {
+    gap: 8px;
+  }
+
+  #mainNav a {
+    font-size: 12px;
+    padding: 2px 7px;
+  }
+
+  .hero-stage {
+    padding-top: 92px;
+  }
+
+  .stage-2,
+  .stage-3 {
+    min-height: calc(100svh - 60px);
+    padding-top: 60px;
+  }
+
+  .meta {
+    letter-spacing: 0;
+  }
+
+  .record-circle::before {
+    inset: -10px;
+    border-width: 12px;
+  }
+
+  .timeline-year-flow {
+    height: 340px;
+  }
+
+  .timeline-year-item {
+    width: 84vw;
+  }
+
+  .timeline-track {
+    bottom: 12px;
+  }
+
+  .year-dot {
+    font-size: 10px;
+  }
+
+  .store-addresses p {
+    font-size: 12px;
+  }
+
+  .news-card h3 {
+    font-size: 19px;
+  }
+
+  .news-card {
+    width: 88vw;
+  }
+
+  .topbar-inner::before {
+    right: 48px;
+    font-size: 12px;
+    padding: 0 8px;
+    height: 26px;
+  }
+
+  .topbar-inner::after {
+    width: 32px;
+    height: 32px;
+    font-size: 22px;
   }
 }
