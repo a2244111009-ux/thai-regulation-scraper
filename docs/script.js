@@ -52,13 +52,9 @@ let hasCounted = false;
 let fastTransitionLock = false;
 let heroST = null;
 let timelineST = null;
-let globalSnapST = null;
-let sectionSnapLock = false;
 let bridgeST = null;
 let bridgeActive = false;
-let lastTimelineProgress = -1;
-let bridgeStartTop = 0;
-let bridgeEndTop = 0;
+let lenis = null;
 
 function clamp01(v) {
   return Math.max(0, Math.min(1, v));
@@ -222,6 +218,21 @@ if (window.gsap && window.ScrollTrigger) {
   });
   buildTimelineFlow();
 
+  if (window.Lenis) {
+    lenis = new window.Lenis({
+      duration: 1.08,
+      smoothWheel: true,
+      wheelMultiplier: 0.95,
+      touchMultiplier: 1.02,
+      infinite: false,
+    });
+    lenis.on("scroll", ScrollTrigger.update);
+    gsap.ticker.add((time) => {
+      lenis.raf(time * 1000);
+    });
+    gsap.ticker.lagSmoothing(0);
+  }
+
   gsap.set([stage2, stage3, stage4], { autoAlpha: 0 });
   gsap.set([bgOrange, bgNeon], { opacity: 0 });
   gsap.set(recordCircle, { scale: 1, transformOrigin: "center center" });
@@ -235,14 +246,6 @@ if (window.gsap && window.ScrollTrigger) {
     scrub: 0.12,
     anticipatePin: 1,
     fastScrollEnd: true,
-    snap: {
-      snapTo: [0, 0.32, 0.56, 0.84, 1],
-      duration: { min: 0.06, max: 0.16 },
-      delay: 0.12,
-      ease: "power1.out",
-      directional: true,
-      inertia: true,
-    },
     onUpdate: (self) => {
       if (fastTransitionLock) return;
       const p = self.progress;
@@ -332,7 +335,11 @@ if (window.gsap && window.ScrollTrigger) {
       gsap
         .timeline({
           onComplete: () => {
-            window.scrollTo({ top: toTop, behavior: "smooth" });
+            if (lenis) {
+              lenis.scrollTo(toTop, { duration: 0.75, immediate: false });
+            } else {
+              window.scrollTo({ top: toTop, behavior: "smooth" });
+            }
             setTimeout(() => {
               fastTransitionLock = false;
             }, 450);
@@ -352,18 +359,8 @@ if (window.gsap && window.ScrollTrigger) {
     scrub: 0.32,
     anticipatePin: 1,
     fastScrollEnd: true,
-    snap: {
-      snapTo: [0, 1],
-      duration: { min: 0.08, max: 0.18 },
-      delay: 0.1,
-      ease: "power1.out",
-      directional: true,
-      inertia: true,
-    },
     onEnter: () => setNavActive("timeline"),
     onUpdate: (self) => {
-      if (Math.abs(self.progress - lastTimelineProgress) < 0.0014) return;
-      lastTimelineProgress = self.progress;
       const idx = Math.round(self.progress * (years.length - 1));
       const t = self.progress;
       if (timelineFlowItems.length) {
@@ -497,17 +494,9 @@ if (window.gsap && window.ScrollTrigger) {
     gsap.set([bridgeCurrent, bridgeNext], { scale: 1, autoAlpha: 0, x: 0, y: 0 });
     gsap.set([bridgeDot, bridgeRing], { autoAlpha: 0 });
     bridgeST = ScrollTrigger.create({
-      start: heroST.end - 32,
-      end: timelineST.start + 32,
-      scrub: 0.16,
-      snap: {
-        snapTo: [0, 1],
-        duration: { min: 0.06, max: 0.14 },
-        delay: 0.03,
-        directional: true,
-        ease: "power1.out",
-        inertia: true,
-      },
+      start: heroST.end - 18,
+      end: timelineST.start + 18,
+      scrub: 0.1,
       onUpdate: (self) => {
         bridgeActive = true;
         const t = self.progress;
@@ -539,13 +528,6 @@ if (window.gsap && window.ScrollTrigger) {
         gsap.set(timelineScene, { scale: 1, autoAlpha: 1, y: 0 });
       },
     });
-    bridgeStartTop = heroST.end - 32;
-    bridgeEndTop = timelineST.start + 32;
-  }
-
-  if (globalSnapST) {
-    globalSnapST.kill();
-    globalSnapST = null;
   }
 
   const navTargetByKey = (key) => {
@@ -564,60 +546,15 @@ if (window.gsap && window.ScrollTrigger) {
       const key = link.dataset.nav || "home";
       const top = navTargetByKey(key);
       setNavActive(key);
-      window.scrollTo({ top, behavior: "smooth" });
+      if (lenis) {
+        lenis.scrollTo(top, { duration: 0.9, immediate: false });
+      } else {
+        window.scrollTo({ top, behavior: "smooth" });
+      }
       closeMobileMenu();
     });
   });
 
-  const getSnapTops = () => {
-    const storesTop = document.querySelector("#stores")?.offsetTop || 0;
-    const newsTop = document.querySelector("#news")?.offsetTop || 0;
-    const investTop = document.querySelector(".invest-scene")?.offsetTop || 0;
-    const joinTop = document.querySelector("#join")?.offsetTop || 0;
-    return [timelineST.end, storesTop, newsTop, investTop, joinTop]
-      .filter((v, idx, arr) => idx === 0 || Math.abs(v - arr[idx - 1]) > 2);
-  };
-
-  const snapTo = (top) => {
-    sectionSnapLock = true;
-    if (bridgeST) {
-      gsap.set(heroPin, { autoAlpha: 1 });
-      gsap.set(stage4, { scale: 1, autoAlpha: 1, y: 0 });
-      gsap.set(sceneBridge, { autoAlpha: 0 });
-      gsap.set(bridgeCurrent, { autoAlpha: 0, scale: 1, x: 0, y: 0 });
-      gsap.set(bridgeNext, { autoAlpha: 0, scale: 1, x: 0, y: 0 });
-      gsap.set(timelineScene, { scale: 1, autoAlpha: 1, y: 0 });
-    }
-    window.scrollTo({ top, behavior: "smooth" });
-    setTimeout(() => {
-      sectionSnapLock = false;
-    }, 180);
-  };
-
-  let autoSnapTimer = null;
-  const scheduleAutoSnap = () => {
-    if (autoSnapTimer) clearTimeout(autoSnapTimer);
-    autoSnapTimer = setTimeout(() => {
-      if (sectionSnapLock || !timelineST) return;
-      const y = window.scrollY;
-      if (y < timelineST.start - 2) return;
-      if (y >= timelineST.start && y <= timelineST.end) return;
-      if (bridgeStartTop > 0 && bridgeEndTop > bridgeStartTop && y >= bridgeStartTop && y <= bridgeEndTop) return;
-      const tops = getSnapTops();
-      if (!tops.length) return;
-      const nearest = tops.reduce((best, cur) => (
-        Math.abs(cur - y) < Math.abs(best - y) ? cur : best
-      ), tops[0]);
-      const maxSnapDist = window.innerHeight * 0.46;
-      if (Math.abs(nearest - y) <= maxSnapDist) {
-        snapTo(nearest);
-      }
-    }, 95);
-  };
-
-  window.addEventListener("wheel", scheduleAutoSnap, { passive: true });
-  window.addEventListener("touchend", scheduleAutoSnap, { passive: true });
-  window.addEventListener("keyup", scheduleAutoSnap, { passive: true });
 }
 
 if (mobileMenuBtn && mobileMenu) {
