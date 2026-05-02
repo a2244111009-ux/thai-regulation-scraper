@@ -1,0 +1,597 @@
+const navLinks = Array.from(document.querySelectorAll("#mainNav a"));
+const stage1 = document.getElementById("stage1");
+const stage2 = document.getElementById("stage2");
+const stage3 = document.getElementById("stage3");
+const stage4 = document.getElementById("about");
+const heroPin = document.querySelector(".hero-pin");
+const bgVideo = document.getElementById("bgVideo");
+const bgOrange = document.getElementById("bgOrange");
+const bgNeon = document.getElementById("bgNeon");
+const playBtn = document.getElementById("playToNext");
+const recordCircle = document.getElementById("recordCircle");
+const countEls = Array.from(document.querySelectorAll("[data-count]"));
+const mapPoints = Array.from(document.querySelectorAll(".map-point"));
+const newsCards = Array.from(document.querySelectorAll(".news-card"));
+const yearDots = Array.from(document.querySelectorAll(".year-dot"));
+const yearTitle = document.getElementById("yearTitle");
+const yearDesc = document.getElementById("yearDesc");
+const walker = document.getElementById("walker");
+const joinParticles = document.getElementById("joinParticles");
+const sceneBridge = document.getElementById("sceneBridge");
+const timelineScene = document.getElementById("timeline");
+const bridgeCurrent = document.querySelector(".bridge-current");
+const bridgeNext = document.querySelector(".bridge-next");
+const bridgeDot = document.querySelector(".bridge-dot");
+const bridgeRing = document.querySelector(".bridge-ring");
+const timelineContent = document.querySelector(".timeline-content");
+const timelineTrack = document.getElementById("timelineTrack");
+const stage1TextEls = Array.from(document.querySelectorAll("#stage1 .eyebrow, #stage1 h1, #stage1 .meta"));
+const stage2MetricEls = Array.from(document.querySelectorAll("#stage2 .metric"));
+const stage3TextEls = Array.from(document.querySelectorAll("#stage3 .record-text h2, #stage3 .record-text li"));
+const stage3TipEl = document.querySelector("#stage3 .play-tip");
+const stage4TextEls = Array.from(document.querySelectorAll("#about .about-card h2, #about .about-card p"));
+const storeHeadingEls = Array.from(document.querySelectorAll(".store-copy h2, .store-copy p"));
+const storeAddressEls = Array.from(document.querySelectorAll(".store-addresses p"));
+const newsTextEls = Array.from(document.querySelectorAll(".news-head .eyebrow, .news-head h2, .news-card time, .news-card h3, .news-card p"));
+const joinTextEls = Array.from(document.querySelectorAll("#join header, #join .join-form"));
+let timelineFlowItems = [];
+
+const years = [
+  { title: "2011", desc: "品牌启航，首家门店正式开业。" },
+  { title: "2013-2015", desc: "主题门店进入核心商圈，模型逐步成熟。" },
+  { title: "2016", desc: "首次跨城布局，品牌影响力持续提升。" },
+  { title: "2020", desc: "完成数字化升级，强化门店精细化运营。" },
+  { title: "2023", desc: "加速拓展，完善区域协同管理体系。" },
+  { title: "2024-至今", desc: "7家门店持续发光，进入新增量阶段。" },
+];
+
+let currentStage = "";
+let hasCounted = false;
+let fastTransitionLock = false;
+let heroST = null;
+let timelineST = null;
+let globalSnapST = null;
+let sectionSnapLock = false;
+let bridgeST = null;
+let bridgeActive = false;
+
+function clamp01(v) {
+  return Math.max(0, Math.min(1, v));
+}
+
+function applyWaveUp(items, progress, options = {}) {
+  const { stagger = 0.2, rise = 58, blur = 0 } = options;
+  items.forEach((el, idx) => {
+    const local = clamp01((progress - idx * stagger) / (1 - Math.min(0.85, stagger * (items.length - 1))));
+    gsap.set(el, {
+      autoAlpha: local,
+      y: (1 - local) * rise,
+      filter: blur > 0 ? `blur(${(1 - local) * blur}px)` : "blur(0px)",
+    });
+  });
+}
+
+function buildTimelineFlow() {
+  if (!timelineScene) return;
+  const old = timelineScene.querySelector(".timeline-year-flow");
+  if (old) old.remove();
+
+  const flow = document.createElement("div");
+  flow.className = "timeline-year-flow";
+  years.forEach((item, idx) => {
+    const tag = document.createElement("article");
+    tag.className = "timeline-year-item";
+    if (idx === 0) tag.classList.add("is-main");
+    const y = document.createElement("h3");
+    y.className = "timeline-year-title";
+    y.textContent = item.title;
+    const d = document.createElement("p");
+    d.className = "timeline-year-desc";
+    d.textContent = item.desc;
+    tag.appendChild(y);
+    tag.appendChild(d);
+    flow.appendChild(tag);
+  });
+  timelineScene.appendChild(flow);
+  timelineFlowItems = Array.from(flow.querySelectorAll(".timeline-year-item"));
+}
+
+function setNavActive(key) {
+  navLinks.forEach((link) => link.classList.toggle("active", link.dataset.nav === key));
+}
+
+function setStageState(el, active) {
+  if (!el) return;
+  el.classList.toggle("is-active", active);
+}
+
+function showOnly(target) {
+  if (currentStage === target?.id) return;
+  currentStage = target?.id || "";
+  if (heroPin) {
+    heroPin.classList.toggle("mode-stage2", target === stage2);
+  }
+  [stage1, stage2, stage3, stage4].forEach((el) => {
+    if (!el) return;
+    const active = el === target;
+    setStageState(el, active);
+    gsap.set(el, {
+      autoAlpha: active ? 1 : 0,
+      y: active ? 0 : 24,
+    });
+  });
+}
+
+function animateCount() {
+  countEls.forEach((el) => {
+    const target = Number(el.dataset.count || 0);
+    const counter = { value: 0 };
+    gsap.to(counter, {
+      value: target,
+      duration: 1.5,
+      ease: "power2.out",
+      onUpdate: () => {
+        el.textContent = `${Math.round(counter.value)}`;
+      },
+      onComplete: () => {
+        el.textContent = `${target}`;
+      },
+    });
+  });
+}
+
+function setYear(index) {
+  const i = Math.max(0, Math.min(index, years.length - 1));
+  yearDots.forEach((dot, idx) => dot.classList.toggle("active", idx === i));
+  if (yearTitle && yearDesc) {
+    yearTitle.textContent = years[i].title;
+    yearDesc.textContent = years[i].desc;
+  }
+  const dot = yearDots[i];
+  if (walker && dot) {
+    walker.style.left = `${dot.offsetLeft + dot.offsetWidth / 2}px`;
+  }
+}
+
+function buildJoinParticles() {
+  if (!joinParticles) return;
+  const count = 46;
+  for (let i = 0; i < count; i += 1) {
+    const particle = document.createElement("span");
+    particle.className = "join-particle";
+    const size = 3 + Math.random() * 5;
+    particle.style.setProperty("--size", `${size}px`);
+    joinParticles.appendChild(particle);
+  }
+
+  const particles = Array.from(joinParticles.querySelectorAll(".join-particle"));
+  particles.forEach((particle, idx) => {
+    const delay = (idx % 14) * 0.16;
+    const radius = 320 + Math.random() * 500;
+    const angle = Math.random() * Math.PI * 2;
+    const fromX = Math.cos(angle) * radius;
+    const fromY = Math.sin(angle) * radius;
+    const toX = (Math.random() - 0.5) * 30;
+    const toY = (Math.random() - 0.5) * 30;
+
+    gsap.fromTo(
+      particle,
+      {
+        x: fromX,
+        y: fromY,
+        opacity: 0,
+        scale: 0.45,
+      },
+      {
+        x: toX,
+        y: toY,
+        opacity: 0.95,
+        scale: 1,
+        duration: 3.8 + Math.random() * 1.6,
+        delay,
+        repeat: -1,
+        repeatDelay: Math.random() * 0.9,
+        ease: "power2.in",
+      }
+    );
+  });
+}
+
+yearDots.forEach((dot) => {
+  dot.addEventListener("click", () => setYear(Number(dot.dataset.idx || 0)));
+});
+
+if (window.gsap && window.ScrollTrigger) {
+  gsap.registerPlugin(ScrollTrigger);
+  buildTimelineFlow();
+
+  gsap.set([stage2, stage3, stage4], { autoAlpha: 0 });
+  gsap.set([bgOrange, bgNeon], { opacity: 0 });
+  gsap.set(recordCircle, { scale: 1, transformOrigin: "center center" });
+
+  heroST = ScrollTrigger.create({
+    trigger: ".hero-pin",
+    start: "top top",
+    end: "+=2400",
+    pin: true,
+    scrub: true,
+    onUpdate: (self) => {
+      if (fastTransitionLock) return;
+      const p = self.progress;
+      const stage1Leave = clamp01((p - 0.1) / 0.08);
+      const stage2Wave = clamp01((p - 0.17) / 0.14);
+      const stage3Rise = clamp01((p - 0.34) / 0.14);
+      const stage4Rise = clamp01((p - 0.58) / 0.16);
+
+      stage1TextEls.forEach((el) => {
+        gsap.set(el, {
+          autoAlpha: 1 - stage1Leave,
+          y: -stage1Leave * 66,
+          filter: `blur(${stage1Leave * 7}px)`,
+        });
+      });
+
+      applyWaveUp(stage2MetricEls, stage2Wave, { stagger: 0.2, rise: 82, blur: 0 });
+      applyWaveUp(stage3TextEls, stage3Rise, { stagger: 0.17, rise: 90, blur: 12 });
+      applyWaveUp(stage4TextEls, stage4Rise, { stagger: 0.22, rise: 92, blur: 12 });
+
+      if (p < 0.16) {
+        showOnly(stage1);
+        gsap.set(bgVideo, { opacity: 1 });
+        gsap.set(bgOrange, { opacity: 0 });
+        gsap.set(bgNeon, { opacity: 0 });
+        gsap.set(recordCircle, { scale: 1 });
+        setNavActive("home");
+        return;
+      }
+
+      if (p < 0.40) {
+        showOnly(stage2);
+        gsap.set(bgVideo, { opacity: 0 });
+        gsap.set(bgOrange, { opacity: 1 });
+        gsap.set(bgNeon, { opacity: 0 });
+        gsap.set(recordCircle, { scale: 1 });
+        setNavActive("about");
+        if (!hasCounted) {
+          hasCounted = true;
+          animateCount();
+        }
+        return;
+      }
+
+      if (p < 0.64) {
+        showOnly(stage3);
+        gsap.set(bgVideo, { opacity: 0 });
+        gsap.set(bgOrange, { opacity: 1 });
+        gsap.set(bgNeon, { opacity: 0 });
+        gsap.set(recordCircle, { scale: 1 });
+        gsap.set(stage3, { autoAlpha: 1 });
+        gsap.set([...stage3TextEls, stage3TipEl].filter(Boolean), { autoAlpha: 1 });
+        setNavActive("about");
+        return;
+      }
+
+      if (p < 0.82) {
+        const t = (p - 0.64) / (0.82 - 0.64);
+        showOnly(stage3);
+        gsap.set(bgOrange, { opacity: 1 });
+        gsap.set(bgNeon, { opacity: 0 });
+        gsap.set(recordCircle, { scale: 1 + t * 4.6 });
+        gsap.set(stage3, { autoAlpha: 1 });
+        gsap.set([...stage3TextEls, stage3TipEl].filter(Boolean), { autoAlpha: 0 });
+        gsap.set(stage4, { autoAlpha: 0 });
+        setNavActive("about");
+        return;
+      }
+
+      showOnly(stage4);
+      if (bridgeActive) {
+        gsap.set(stage4, { autoAlpha: 0, y: 0, scale: 1 });
+        return;
+      }
+      gsap.set(bgVideo, { opacity: 0 });
+      gsap.set(bgOrange, { opacity: 0 });
+      gsap.set(bgNeon, { opacity: 1 });
+      gsap.set(recordCircle, { scale: 1 });
+      gsap.set(stage4, { autoAlpha: 1, y: 0 });
+      setNavActive("about");
+    },
+  });
+
+  if (playBtn && recordCircle) {
+    playBtn.addEventListener("click", () => {
+      fastTransitionLock = true;
+      const toTop = heroST.start + (heroST.end - heroST.start) * 0.86;
+      gsap
+        .timeline({
+          onComplete: () => {
+            window.scrollTo({ top: toTop, behavior: "smooth" });
+            setTimeout(() => {
+              fastTransitionLock = false;
+            }, 450);
+          },
+        })
+        .to(recordCircle, { scale: 5.2, duration: 0.28, ease: "power3.inOut" })
+        .to(stage3, { autoAlpha: 0, duration: 0.18 }, "<+0.06")
+        .to(recordCircle, { scale: 1, duration: 0.01 });
+    });
+  }
+
+  timelineST = ScrollTrigger.create({
+    trigger: "#timeline",
+    start: "top top",
+    end: "+=2200",
+    pin: true,
+    scrub: true,
+    onEnter: () => setNavActive("timeline"),
+    onUpdate: (self) => {
+      const idx = Math.round(self.progress * (years.length - 1));
+      const t = self.progress;
+      if (timelineContent) {
+        gsap.set(timelineContent, { autoAlpha: 0 });
+      }
+      if (timelineFlowItems.length) {
+        const spacing = 560;
+        const anchorX = window.innerWidth * 0.12;
+        const flowProgress = t * (timelineFlowItems.length - 1);
+        timelineFlowItems.forEach((el, i) => {
+          const y = i === 0 ? 0 : (i % 2 === 1 ? 130 : -130);
+          gsap.set(el, { x: anchorX + (i - flowProgress) * spacing, y });
+        });
+      }
+      if (timelineTrack) {
+        gsap.set(timelineTrack, { x: 0, autoAlpha: 1 });
+      }
+      setYear(idx);
+    },
+  });
+
+  gsap.fromTo(
+    mapPoints,
+    { y: -220, opacity: 0, scale: 0.28 },
+    {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      duration: 1.05,
+      stagger: 0.28,
+      ease: "bounce.out",
+      scrollTrigger: {
+        trigger: ".store-scene",
+        start: "top 66%",
+        onEnter: () => setNavActive("stores"),
+      },
+    }
+  );
+
+  gsap.to(newsCards, {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    duration: 1.05,
+    stagger: 0.16,
+    scrollTrigger: {
+      trigger: ".news-list",
+      start: "top 80%",
+    },
+  });
+
+  gsap.fromTo(
+    storeHeadingEls,
+    { y: -160, opacity: 0 },
+    {
+      y: 0,
+      opacity: 1,
+      duration: 1.15,
+      stagger: 0.12,
+      ease: "bounce.out",
+      scrollTrigger: {
+        trigger: ".store-scene",
+        start: "top 68%",
+      },
+    }
+  );
+
+  gsap.fromTo(
+    storeAddressEls,
+    { opacity: 0 },
+    {
+      opacity: 1,
+      duration: 2.1,
+      stagger: 0.16,
+      ease: "power1.out",
+      scrollTrigger: {
+        trigger: ".store-addresses",
+        start: "top 80%",
+      },
+    }
+  );
+
+  gsap.fromTo(
+    newsTextEls,
+    { y: 88, opacity: 0, filter: "blur(12px)" },
+    {
+      y: 0,
+      opacity: 1,
+      filter: "blur(0px)",
+      stagger: 0.045,
+      ease: "none",
+      scrollTrigger: {
+        trigger: "#news",
+        start: "top 88%",
+        end: "top 54%",
+        scrub: true,
+      },
+    }
+  );
+
+  gsap.fromTo(
+    joinTextEls,
+    { opacity: 0 },
+    {
+      opacity: 1,
+      duration: 1.8,
+      ease: "power1.out",
+      scrollTrigger: {
+        trigger: "#join",
+        start: "top 62%",
+        toggleActions: "play none none reverse",
+      },
+    }
+  );
+
+  gsap.to(".invest-content", {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    duration: 1.4,
+    ease: "power2.out",
+    scrollTrigger: {
+      trigger: ".invest-scene",
+      start: "top 72%",
+    },
+  });
+
+  ScrollTrigger.create({
+    trigger: "#join",
+    start: "top 75%",
+    onEnter: () => setNavActive("join"),
+  });
+
+  if (sceneBridge && timelineScene) {
+    gsap.set(sceneBridge, { autoAlpha: 0 });
+    gsap.set(timelineScene, { scale: 1, autoAlpha: 1, y: 0 });
+    gsap.set([bridgeCurrent, bridgeNext], { scale: 1, autoAlpha: 0, x: 0, y: 0 });
+    gsap.set([bridgeDot, bridgeRing], { autoAlpha: 0 });
+    bridgeST = ScrollTrigger.create({
+      start: heroST.end - 65,
+      end: timelineST.start + 65,
+      scrub: true,
+      onUpdate: (self) => {
+        bridgeActive = true;
+        const t = self.progress;
+        gsap.set(heroPin, { autoAlpha: 0 });
+        gsap.set(stage4, { scale: 1, autoAlpha: 0, transformOrigin: "50% 50%", y: 0 });
+        gsap.set(sceneBridge, { autoAlpha: 1 });
+        gsap.set(bridgeCurrent, { autoAlpha: 1 - t, scale: 1, x: 0, y: 0 });
+        gsap.set(bridgeNext, { autoAlpha: t, scale: 1, x: 0, y: 0 });
+        gsap.set(timelineScene, { scale: 1, autoAlpha: 0, y: 0, transformOrigin: "50% 50%" });
+      },
+      onLeave: () => {
+        bridgeActive = false;
+        gsap.set(heroPin, { autoAlpha: 1 });
+        gsap.set(stage4, { scale: 1, autoAlpha: 1, y: 0 });
+        gsap.set(sceneBridge, { autoAlpha: 0 });
+        gsap.set(bridgeCurrent, { autoAlpha: 0, scale: 1, x: 0, y: 0 });
+        gsap.set(bridgeNext, { autoAlpha: 0, scale: 1, x: 0, y: 0 });
+        gsap.set(timelineScene, { scale: 1, autoAlpha: 1, y: 0 });
+      },
+      onLeaveBack: () => {
+        bridgeActive = false;
+        gsap.set(heroPin, { autoAlpha: 1 });
+        gsap.set(stage4, { scale: 1, autoAlpha: 1, y: 0 });
+        gsap.set(sceneBridge, { autoAlpha: 0 });
+        gsap.set(bridgeCurrent, { autoAlpha: 0, scale: 1, x: 0, y: 0 });
+        gsap.set(bridgeNext, { autoAlpha: 0, scale: 1, x: 0, y: 0 });
+        gsap.set(timelineScene, { scale: 1, autoAlpha: 1, y: 0 });
+      },
+    });
+  }
+
+  if (globalSnapST) {
+    globalSnapST.kill();
+    globalSnapST = null;
+  }
+
+  const navTargetByKey = (key) => {
+    if (!heroST || !timelineST) return 0;
+    if (key === "home") return heroST.start;
+    if (key === "about") return heroST.start + (heroST.end - heroST.start) * 0.94;
+    if (key === "timeline") return timelineST.start;
+    if (key === "stores") return document.querySelector("#stores")?.offsetTop || 0;
+    if (key === "join") return document.querySelector("#join")?.offsetTop || 0;
+    return 0;
+  };
+
+  navLinks.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      const key = link.dataset.nav || "home";
+      const top = navTargetByKey(key);
+      setNavActive(key);
+      window.scrollTo({ top, behavior: "smooth" });
+    });
+  });
+
+  const getSnapTops = () => {
+    const storesTop = document.querySelector("#stores")?.offsetTop || 0;
+    const newsTop = document.querySelector("#news")?.offsetTop || 0;
+    const investTop = document.querySelector(".invest-scene")?.offsetTop || 0;
+    const joinTop = document.querySelector("#join")?.offsetTop || 0;
+    return [timelineST.end, storesTop, newsTop, investTop, joinTop]
+      .filter((v, idx, arr) => idx === 0 || Math.abs(v - arr[idx - 1]) > 2);
+  };
+
+  const snapTo = (top) => {
+    sectionSnapLock = true;
+    if (bridgeST) {
+      gsap.set(heroPin, { autoAlpha: 1 });
+      gsap.set(stage4, { scale: 1, autoAlpha: 1, y: 0 });
+      gsap.set(sceneBridge, { autoAlpha: 0 });
+      gsap.set(bridgeCurrent, { autoAlpha: 0, scale: 1, x: 0, y: 0 });
+      gsap.set(bridgeNext, { autoAlpha: 0, scale: 1, x: 0, y: 0 });
+      gsap.set(timelineScene, { scale: 1, autoAlpha: 1, y: 0 });
+    }
+    window.scrollTo({ top, behavior: "smooth" });
+    setTimeout(() => {
+      sectionSnapLock = false;
+    }, 220);
+  };
+
+  window.addEventListener(
+    "wheel",
+    (event) => {
+      if (sectionSnapLock || !timelineST) return;
+      const y = window.scrollY;
+      const delta = event.deltaY;
+      if (Math.abs(delta) < 2) return;
+      if (y < timelineST.start - 2) return;
+
+      if (y >= timelineST.start && y <= timelineST.end) {
+        const p = (y - timelineST.start) / (timelineST.end - timelineST.start);
+        if (delta > 0 && p > 0.5) {
+          event.preventDefault();
+          snapTo(timelineST.end + 2);
+        }
+        if (delta < 0 && p < 0.5) {
+          event.preventDefault();
+          snapTo(timelineST.start);
+        }
+        return;
+      }
+
+      const tops = getSnapTops();
+      for (let i = 0; i < tops.length - 1; i += 1) {
+        const top = tops[i];
+        const next = tops[i + 1];
+        if (y >= top && y < next) {
+          const p = (y - top) / (next - top);
+          if (delta > 0 && p > 0.5) {
+            event.preventDefault();
+            snapTo(next);
+          } else if (delta < 0 && p < 0.5) {
+            event.preventDefault();
+            snapTo(top);
+          }
+          break;
+        }
+      }
+    },
+    { passive: false }
+  );
+}
+
+buildJoinParticles();
+setNavActive("home");
+setYear(0);
+window.scrollTo(0, 0);
