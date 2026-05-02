@@ -58,6 +58,8 @@ let bridgeST = null;
 let bridgeActive = false;
 let lastHeroProgress = -1;
 let lastTimelineProgress = -1;
+let bridgeStartTop = 0;
+let bridgeEndTop = 0;
 
 function clamp01(v) {
   return Math.max(0, Math.min(1, v));
@@ -482,8 +484,8 @@ if (window.gsap && window.ScrollTrigger) {
     gsap.set([bridgeCurrent, bridgeNext], { scale: 1, autoAlpha: 0, x: 0, y: 0 });
     gsap.set([bridgeDot, bridgeRing], { autoAlpha: 0 });
     bridgeST = ScrollTrigger.create({
-      start: heroST.end - 65,
-      end: timelineST.start + 65,
+      start: heroST.end - 32,
+      end: timelineST.start + 32,
       scrub: true,
       onUpdate: (self) => {
         bridgeActive = true;
@@ -514,6 +516,8 @@ if (window.gsap && window.ScrollTrigger) {
         gsap.set(timelineScene, { scale: 1, autoAlpha: 1, y: 0 });
       },
     });
+    bridgeStartTop = heroST.end - 32;
+    bridgeEndTop = timelineST.start + 32;
   }
 
   if (globalSnapST) {
@@ -574,6 +578,27 @@ if (window.gsap && window.ScrollTrigger) {
       const y = window.scrollY;
       const delta = event.deltaY;
       if (Math.abs(delta) < 2) return;
+
+      if (bridgeStartTop > 0 && bridgeEndTop > bridgeStartTop && y >= bridgeStartTop && y <= bridgeEndTop) {
+        const p = (y - bridgeStartTop) / (bridgeEndTop - bridgeStartTop);
+        const aboutTop = heroST.start + (heroST.end - heroST.start) * 0.94;
+        event.preventDefault();
+        if (delta > 0) {
+          if (p > 0.46) {
+            snapTo(timelineST.start + 2);
+          } else {
+            snapTo(aboutTop);
+          }
+        } else if (delta < 0) {
+          if (p < 0.54) {
+            snapTo(aboutTop);
+          } else {
+            snapTo(timelineST.start + 2);
+          }
+        }
+        return;
+      }
+
       if (y < timelineST.start - 2) return;
 
       if (y >= timelineST.start && y <= timelineST.end) {
